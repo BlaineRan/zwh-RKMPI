@@ -1,3 +1,5 @@
 # *.o
 .vscode
 build/
+zwh-rga-test/build
+build_test

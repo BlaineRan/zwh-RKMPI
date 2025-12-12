@@ -45,9 +45,12 @@ bool InitVencChannels() {
         stVencChnAttr.stVencAttr.u32BufSize = SUB_WIDTH * SUB_HEIGHT * 2;
         
         stVencChnAttr.stRcAttr.enRcMode = VENC_RC_MODE_H264CBR;
-        stVencChnAttr.stRcAttr.stH264Cbr.u32Gop = 25;
+        // 设置 30fps 编码，并将 GOP 调整为 15（30fps 下每秒 2 个 I 帧）
+        stVencChnAttr.stRcAttr.stH264Cbr.u32Gop = 15;
         stVencChnAttr.stRcAttr.stH264Cbr.u32BitRate = 256; 
-        stVencChnAttr.stRcAttr.stH264Cbr.fr32DstFrameRateNum = 25;
+        stVencChnAttr.stRcAttr.stH264Cbr.u32SrcFrameRateDen = 1;
+        stVencChnAttr.stRcAttr.stH264Cbr.u32SrcFrameRateNum = 30;
+        stVencChnAttr.stRcAttr.stH264Cbr.fr32DstFrameRateNum = 30;
         stVencChnAttr.stRcAttr.stH264Cbr.fr32DstFrameRateDen = 1;
 
         RK_S32 s32Ret = RK_MPI_VENC_CreateChn(i, &stVencChnAttr);

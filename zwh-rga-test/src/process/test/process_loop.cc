@@ -157,6 +157,7 @@ void ProcessFrames(const RtspContext &ctx, MB_POOL subImgPool) {
         
         // STEP 1: 从 VI 拉取一帧图像（NV12，1080P），超时 1000ms
         RK_S32 s32Ret = RK_MPI_VI_GetChnFrame(0, 0, &viFrame, 1000);
+        printf("test\n");
         if(s32Ret == RK_SUCCESS) {
             if (statStartMs == 0) {
                 statStartMs = GetMs();

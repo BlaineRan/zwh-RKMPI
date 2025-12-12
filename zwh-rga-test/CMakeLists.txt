@@ -59,6 +59,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${REPO_ROOT}/common 
     ${REPO_ROOT}/common/isp3.x 
     ${CMAKE_CURRENT_SOURCE_DIR}/src
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/process
+    ${CMAKE_CURRENT_SOURCE_DIR}/src/utils
 )
 
 # 9. 链接库 (复刻官方 uclibc 的链接列表)

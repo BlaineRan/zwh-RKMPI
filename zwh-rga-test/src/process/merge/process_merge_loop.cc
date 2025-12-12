@@ -85,7 +85,8 @@ static uint64_t GetMs() {
     return (uint64_t)tv.tv_sec * 1000ULL + tv.tv_usec / 1000ULL;
 }
 
-void ProcessMergedFrames(const RtspContext &ctx) {
+void ProcessMergedFrames(const RtspContext &ctx, MB_POOL subImgPool) {
+    (void)subImgPool; // 合并流程内部自建画布池
     if (!ctx.demo) {
         printf("RTSP demo not initialized.\n");
         return;

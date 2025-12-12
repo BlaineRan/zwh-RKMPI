@@ -13,40 +13,61 @@
 #include "utils/pipeline_init.h"
 #include "process/test/process_loop.h"
 #include "process/merge/process_merge_loop.h"
+#include "process/net/process_net_loop.h"
 
 int main(int argc, char *argv[]) {
-    // 切换开关：true 仅输出合并后的 /live/merged；false 输出 16 路 /live/0~15
-    const bool kUseMergedOutput = true;
+    // mode: 0=原始16路推流；1=合并推流；2=网络裁剪传输测试
+    int mode = 0;
+    if (argc > 1) {
+        mode = atoi(argv[1]);
+        
+    }
+    printf("Run mode: %d (0=16ch, 1=merged, 2=net test)\n", mode);
 
     // 初始化基础 MPI 系统
-    if (!InitMpiSys()) return -1;
+    if (!InitMpiSys()) {
+        printf("InitMpiSys failed\n");
+        return -1;
+    }
 
     // 开启 ISP（RKAIQ），确保自动曝光/白平衡等 3A 生效
     StartIsp();
 
     // 创建 RTSP Server，并为 16 路编码分别建立 session
     RtspContext rtspCtx;
-    if (!InitRtsp(rtspCtx)) return -1;
+
+    if (!InitRtsp(rtspCtx)) {
+        printf("InitRtsp failed\n");
+        return -1;
+    }
 
     // 初始化 VI，打开摄像头并设置 1080P 输入
     InitViInput();
 
-    if (kUseMergedOutput) {
-        // 仅跑合并模式：跳过 tile0，其他 15 路拼回 1080P，推送到 /live/merged
-        ProcessMergedFrames(rtspCtx);
+    MB_POOL subImgPool = MB_INVALID_POOLID;
+    if (mode != 1) {
+        if (!CreateSubImgPool(subImgPool)) {
+            printf("CreateSubImgPool failed\n");
+            return -1;
+        }
+    }
+
+    if (mode == 1) {
+        // 合并模式：跳过一个 tile 的同时拼回 1080P，推送 /live/merged
+        ProcessMergedFrames(rtspCtx, subImgPool);
+    } else if (mode == 2) {
+        // 网络裁剪传输测试：裁剪子画面后走 SendTileOverNetwork_Test
+        ProcessNetLoop(rtspCtx, subImgPool);
     } else {
         // 原始模式：16 路独立编码 + 推流
-        // 第 3 步：为 16 路子画面创建独立编码通道
-        if (!InitVencChannels()) return -1;
-
-        // 第 4 步：预分配子画面内存池，方便 RGA 输出和 VENC 复用
-        MB_POOL subImgPool;
-        if (!CreateSubImgPool(subImgPool)) return -1;
-
-        // 第 5 步：进入 16 路裁剪编码推流
+        if (!InitVencChannels()) {
+            printf("InitVencChannels failed\n");
+            return -1;
+        }
         ProcessFrames(rtspCtx, subImgPool);
+    }
 
-        // 释放子画面池
+    if (subImgPool != MB_INVALID_POOLID) {
         RK_MPI_MB_DestroyPool(subImgPool);
     }
 
