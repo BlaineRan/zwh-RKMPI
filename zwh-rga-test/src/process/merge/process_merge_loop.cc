@@ -173,10 +173,12 @@ void ProcessMergedFrames(const RtspContext &ctx, MB_POOL subImgPool) {
             // 取码流推送到合并 RTSP
             if (RK_MPI_VENC_GetStream(kMergedChnId, &stStream, 0) == RK_SUCCESS) {
                 void *pData = RK_MPI_MB_Handle2VirAddr(stStream.pstPack->pMbBlk);
-                // if (mergedSession) {
-                //     rtsp_tx_video(mergedSession, (uint8_t *)pData, stStream.pstPack->u32Len,
-                //                   stStream.pstPack->u64PTS);
-                // }
+                if (mergedSession) {
+                    rtsp_tx_video(mergedSession,
+                                  (uint8_t *)pData,
+                                  stStream.pstPack->u32Len,
+                                  stStream.pstPack->u64PTS);
+                }
                 RK_MPI_VENC_ReleaseStream(kMergedChnId, &stStream);
             }
 

@@ -98,10 +98,13 @@ static void ProcessSingleTile(int r,
     if (RK_MPI_VENC_GetStream(chnId, &stream, 0) == RK_SUCCESS) {
         void *pData = RK_MPI_MB_Handle2VirAddr(stream.pstPack->pMbBlk);
 
-        // if (ctx.demo && ctx.sessions[chnId]) {
-        //     rtsp_tx_video(ctx.sessions[chnId], (uint8_t *)pData, stream.pstPack->u32Len,
-        //                   stream.pstPack->u64PTS);
-        // }
+        // 将编码后的码流送入对应的 RTSP 会话
+        if (ctx.demo && chnId < (int)ctx.sessions.size() && ctx.sessions[chnId]) {
+            rtsp_tx_video(ctx.sessions[chnId],
+                          (uint8_t *)pData,
+                          stream.pstPack->u32Len,
+                          stream.pstPack->u64PTS);
+        }
         
         sentCnt[chnId]++;
         SendTileOverNetworkPlaceholder(chnId,
@@ -159,7 +162,7 @@ void ProcessFrames(const RtspContext &ctx, MB_POOL subImgPool) {
         
         // STEP 1: 从 VI 拉取一帧图像（NV12，1080P），超时 1000ms
         RK_S32 s32Ret = RK_MPI_VI_GetChnFrame(0, 0, &viFrame, 1000);
-        printf("test\n");
+        // printf("test\n");
         if(s32Ret == RK_SUCCESS) {
             if (statStartMs == 0) {
                 statStartMs = GetMs();
