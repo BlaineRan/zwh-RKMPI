@@ -28,9 +28,9 @@ static bool InitMergedVenc() {
     attr.stVencAttr.u32BufSize = SRC_WIDTH * SRC_HEIGHT * 2;
 
     attr.stRcAttr.enRcMode = VENC_RC_MODE_H264CBR;
-    attr.stRcAttr.stH264Cbr.u32Gop = 25;
+    attr.stRcAttr.stH264Cbr.u32Gop = 15;
     attr.stRcAttr.stH264Cbr.u32BitRate = 2048; // 更大的分辨率，提升码率
-    attr.stRcAttr.stH264Cbr.fr32DstFrameRateNum = 25;
+    attr.stRcAttr.stH264Cbr.fr32DstFrameRateNum = 30;
     attr.stRcAttr.stH264Cbr.fr32DstFrameRateDen = 1;
 
     RK_S32 ret = RK_MPI_VENC_CreateChn(kMergedChnId, &attr);
@@ -136,8 +136,9 @@ void ProcessMergedFrames(const RtspContext &ctx, MB_POOL subImgPool) {
             RK_MPI_SYS_MmzFlushCache(stViFrame.stVFrame.pMbBlk, RK_FALSE);
 
             // 当前秒内跳过的 tile：秒数 mod TOTAL_CHNS
-            uint64_t elapsedMs = GetMs() - startMs;
-            int skipTile = (elapsedMs / 1000) % TOTAL_CHNS;
+            // uint64_t elapsedMs = GetMs() - startMs;
+            // int skipTile = (elapsedMs / 1000) % TOTAL_CHNS;
+            int skipTile = -1;
 
             // 按 4x4 网格复制，跳过 tile 0（0,0）保持黑色
             for (int r = 0; r < SPLIT_ROW; ++r) {
@@ -146,7 +147,9 @@ void ProcessMergedFrames(const RtspContext &ctx, MB_POOL subImgPool) {
                     if (tileId == skipTile) continue;
                     int x = c * SUB_WIDTH;
                     int y = r * SUB_HEIGHT;
+
                     CopyTileToCanvas(srcVir, canvasVir, x, y, srcStride, dstStride);
+                
                 }
             }
 
@@ -170,10 +173,10 @@ void ProcessMergedFrames(const RtspContext &ctx, MB_POOL subImgPool) {
             // 取码流推送到合并 RTSP
             if (RK_MPI_VENC_GetStream(kMergedChnId, &stStream, 0) == RK_SUCCESS) {
                 void *pData = RK_MPI_MB_Handle2VirAddr(stStream.pstPack->pMbBlk);
-                if (mergedSession) {
-                    rtsp_tx_video(mergedSession, (uint8_t *)pData, stStream.pstPack->u32Len,
-                                  stStream.pstPack->u64PTS);
-                }
+                // if (mergedSession) {
+                //     rtsp_tx_video(mergedSession, (uint8_t *)pData, stStream.pstPack->u32Len,
+                //                   stStream.pstPack->u64PTS);
+                // }
                 RK_MPI_VENC_ReleaseStream(kMergedChnId, &stStream);
             }
 

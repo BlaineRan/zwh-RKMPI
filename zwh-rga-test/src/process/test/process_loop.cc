@@ -97,10 +97,12 @@ static void ProcessSingleTile(int r,
 
     if (RK_MPI_VENC_GetStream(chnId, &stream, 0) == RK_SUCCESS) {
         void *pData = RK_MPI_MB_Handle2VirAddr(stream.pstPack->pMbBlk);
-        if (ctx.demo && ctx.sessions[chnId]) {
-            rtsp_tx_video(ctx.sessions[chnId], (uint8_t *)pData, stream.pstPack->u32Len,
-                          stream.pstPack->u64PTS);
-        }
+
+        // if (ctx.demo && ctx.sessions[chnId]) {
+        //     rtsp_tx_video(ctx.sessions[chnId], (uint8_t *)pData, stream.pstPack->u32Len,
+        //                   stream.pstPack->u64PTS);
+        // }
+        
         sentCnt[chnId]++;
         SendTileOverNetworkPlaceholder(chnId,
                                        frameSeq,
